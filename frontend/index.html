@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetShield Angola</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #F4F6FA;
+  --surface:   #FFFFFF;
+  --border:    #E2E8F0;
+  --primary:   #1E40AF;
+  --primary-l: #EFF6FF;
+  --primary-d: #1E3A8A;
+  --success:   #16A34A;
+  --success-l: #F0FDF4;
+  --warning:   #D97706;
+  --warning-l: #FFFBEB;
+  --danger:    #DC2626;
+  --danger-l:  #FEF2F2;
+  --text:      #0F172A;
+  --text-2:    #475569;
+  --text-3:    #94A3B8;
+  --mono:      'DM Mono', monospace;
+  --sans:      'DM Sans', sans-serif;
+  --radius:    10px;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── AUTH ── */
+#auth-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;
+  background:linear-gradient(135deg,#1E3A8A 0%,#1E40AF 50%,#2563EB 100%);
+}
+.auth-card{
+  background:var(--surface);border-radius:16px;padding:40px;
+  width:100%;max-width:400px;box-shadow:var(--shadow-md);
+}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo svg{width:48px;height:48px;margin-bottom:12px}
+.auth-logo h1{font-size:22px;font-weight:700;color:var(--primary)}
+.auth-logo p{font-size:13px;color:var(--text-2);margin-top:4px}
+.auth-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:28px}
+.auth-tab{
+  flex:1;text-align:center;padding:10px;font-size:14px;font-weight:600;
+  cursor:pointer;color:var(--text-3);border-bottom:2px solid transparent;
+  margin-bottom:-2px;transition:.2s;
+}
+.auth-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:6px}
+.field input{
+  width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);
+  font-family:var(--sans);font-size:14px;color:var(--text);outline:none;transition:.2s;
+}
+.field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,64,175,.12)}
+.btn-primary{
+  width:100%;padding:12px;background:var(--primary);color:#fff;border:none;
+  border-radius:var(--radius);font-family:var(--sans);font-size:15px;font-weight:600;
+  cursor:pointer;transition:.2s;
+}
+.btn-primary:hover{background:var(--primary-d)}
+.auth-error{
+  background:var(--danger-l);color:var(--danger);border:1px solid #FECACA;
+  border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none;
+}
+
+/* ── APP SHELL ── */
+#app{display:none;min-height:100vh;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 24px;height:60px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:100;
+}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;color:var(--primary)}
+.topbar-logo svg{width:28px;height:28px}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.pill-status{
+  display:flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.3px;
+}
+.pill-online{background:var(--success-l);color:var(--success)}
+.pill-offline{background:var(--danger-l);color:var(--danger)}
+.dot-pulse{width:7px;height:7px;border-radius:50%;background:currentColor}
+.dot-pulse.anim{animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.notif-btn{
+  position:relative;width:36px;height:36px;border:1.5px solid var(--border);
+  background:var(--surface);border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+}
+.notif-btn:hover{background:var(--bg)}
+.notif-badge{
+  position:absolute;top:-4px;right:-4px;width:17px;height:17px;
+  background:var(--danger);color:#fff;border-radius:50%;font-size:10px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;
+  display:none;
+}
+.user-chip{
+  display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;
+  border:1.5px solid var(--border);border-radius:999px;cursor:pointer;
+  font-size:13px;font-weight:500;transition:.2s;background:var(--surface);
+}
+.user-chip:hover{background:var(--bg)}
+.avatar{
+  width:26px;height:26px;border-radius:50%;background:var(--primary);
+  color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;
+}
+.avatar.admin-av{background:#7C3AED}
+
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1}
+.sidebar{
+  width:220px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);padding:20px 12px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:8px;font-size:14px;font-weight:500;color:var(--text-2);
+  cursor:pointer;transition:.15s;
+}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--primary-l);color:var(--primary);font-weight:600}
+.nav-icon{width:18px;height:18px;flex-shrink:0}
+.nav-sep{height:1px;background:var(--border);margin:8px 0}
+.nav-section-label{
+  font-size:11px;font-weight:600;color:var(--text-3);
+  letter-spacing:.8px;text-transform:uppercase;padding:8px 12px 4px;
+}
+.content{flex:1;padding:28px;overflow-y:auto;min-width:0}
+
+/* ── PANELS ── */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── CARDS ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+}
+.card-body{padding:20px}
+.card-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{font-size:14px;font-weight:600;color:var(--text)}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.grid-4{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}.sidebar{display:none}}
+
+/* ── RISK CARD ── */
+.risk-card{
+  border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:16px;transition:.4s;
+}
+.risk-card.normal  {background:var(--success-l);border:1px solid #BBF7D0}
+.risk-card.suspeito{background:var(--warning-l);border:1px solid #FDE68A}
+.risk-card.ataque  {background:var(--danger-l);border:1px solid #FECACA;animation:shake-card .3s ease}
+@keyframes shake-card{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.risk-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.risk-icon.normal  {background:#16A34A22}
+.risk-icon.suspeito{background:#D9770622}
+.risk-icon.ataque  {background:#DC262622}
+.risk-label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+.risk-label.normal  {color:var(--success)}
+.risk-label.suspeito{color:var(--warning)}
+.risk-label.ataque  {color:var(--danger)}
+.risk-value{font-size:28px;font-weight:700;line-height:1;color:var(--text)}
+.risk-sub{font-size:12px;color:var(--text-2);margin-top:4px}
+
+/* ── STAT MINI CARDS ── */
+.stat-mini{padding:20px}
+.stat-mini-label{font-size:12px;font-weight:500;color:var(--text-3);margin-bottom:8px}
+.stat-mini-val{font-size:26px;font-weight:700;color:var(--text)}
+.stat-mini-sub{font-size:12px;color:var(--text-2);margin-top:4px}
+
+/* ── SCORE GAUGE ── */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:20px}
+.gauge-ring{position:relative;width:120px;height:120px}
+.gauge-ring svg{transform:rotate(-90deg)}
+.gauge-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.gauge-num{font-size:26px;font-weight:700;font-family:var(--mono)}
+.gauge-unit{font-size:11px;color:var(--text-3);margin-top:2px}
+.gauge-label{margin-top:12px;font-size:13px;font-weight:600;color:var(--text-2)}
+
+/* ── EXPLANATION BOX ── */
+.explain-box{
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6;
+}
+.explain-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
+.explain-row:last-child{margin-bottom:0}
+.explain-row svg{flex-shrink:0;margin-top:2px}
+
+/* ── CHART ── */
+.chart-wrap{padding:20px;height:220px;position:relative}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;max-height:360px;overflow-y:auto}
+.tbl-wrap::-webkit-scrollbar{width:4px;height:4px}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{
+  padding:10px 16px;text-align:left;font-size:11px;font-weight:600;
+  color:var(--text-3);letter-spacing:.6px;text-transform:uppercase;
+  background:var(--bg);border-bottom:1px solid var(--border);
+  position:sticky;top:0;white-space:nowrap;
+}
+tbody td{padding:11px 16px;border-bottom:1px solid var(--border);color:var(--text-2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#F8FAFC}
+
+/* ── BADGES ── */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;
+}
+.badge-normal  {background:var(--success-l);color:var(--success)}
+.badge-suspeito{background:var(--warning-l);color:var(--warning)}
+.badge-ataque  {background:var(--danger-l);color:var(--danger)}
+.badge-info    {background:var(--primary-l);color:var(--primary)}
+.badge-blocked {background:#F3E8FF;color:#7C3AED}
+
+/* ── BUTTONS ── */
+.btn{
+  padding:8px 16px;border-radius:8px;font-family:var(--sans);
+  font-size:13px;font-weight:600;cursor:pointer;border:none;
+  display:inline-flex;align-items:center;gap:6px;transition:.2s;
+}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-blue  {background:var(--primary);color:#fff}
+.btn-blue:hover{background:var(--primary-d)}
+.btn-red   {background:var(--danger);color:#fff}
+.btn-red:hover{background:#B91C1C}
+.btn-ghost {background:transparent;color:var(--text-2);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--bg)}
+.btn-warn  {background:var(--warning);color:#fff}
+.btn-warn:hover{background:#B45309}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#15803D}
+
+/* ── FORM ── */
+.form-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
+.form-field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px}
+.form-field label{font-size:12px;font-weight:500;color:var(--text-2)}
+.form-field input,.form-field select{
+  padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;
+  font-family:var(--sans);font-size:13px;color:var(--text);outline:none;
+  background:var(--surface);transition:.2s;
+}
+.form-field input:focus,.form-field select:focus{border-color:var(--primary)}
+
+/* ── ALERT BANNER ── */
+#alert-toast{
+  position:fixed;top:70px;right:20px;z-index:999;
+  width:340px;background:var(--surface);border-radius:12px;
+  box-shadow:var(--shadow-md);border-left:4px solid transparent;
+  padding:16px 18px;display:none;
+  animation:slideIn .3s ease;
+}
+#alert-toast.critical{border-left-color:var(--danger)}
+#alert-toast.warning {border-left-color:var(--warning)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.toast-msg  {font-size:13px;color:var(--text-2)}
+.toast-close{
+  position:absolute;top:10px;right:12px;background:none;border:none;
+  cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;
+}
+
+/* ── IP BLOCK LIST ── */
+.ip-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+}
+.ip-item:last-child{border-bottom:none}
+.ip-addr{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text)}
+.ip-meta{font-size:12px;color:var(--text-3);margin-top:2px}
+
+/* ── SECTION TITLE ── */
+.sec-title{font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)}
+.sec-sub  {font-size:13px;color:var(--text-2);margin-bottom:24px}
+
+/* ── SIMULATE MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--surface);border-radius:16px;padding:32px;
+  width:100%;max-width:440px;box-shadow:var(--shadow-md);
+}
+.modal h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--text-2);margin-bottom:20px}
+.attack-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.attack-opt{
+  padding:14px;border:2px solid var(--border);border-radius:10px;
+  cursor:pointer;text-align:center;transition:.2s;
+}
+.attack-opt:hover{border-color:var(--primary);background:var(--primary-l)}
+.attack-opt.selected{border-color:var(--primary);background:var(--primary-l)}
+.attack-opt-icon{font-size:24px;margin-bottom:6px}
+.attack-opt-name{font-size:13px;font-weight:600;color:var(--text)}
+.attack-opt-desc{font-size:11px;color:var(--text-2);margin-top:2px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+
+/* ── ADMIN TAG ── */
+.admin-only{display:none}
+.is-admin .admin-only{display:flex}
+
+/* ── USERS TABLE ── */
+.user-row-active  td:first-child{border-left:3px solid var(--success)}
+.user-row-inactive td:first-child{border-left:3px solid var(--text-3)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:40px 20px;color:var(--text-3)}
+.empty svg{width:40px;height:40px;margin-bottom:12px;opacity:.4}
+.empty p{font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ AUTH SCREEN ═══════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 4L6 12V24C6 33.9 14.1 43.2 24 46C33.9 43.2 42 33.9 42 24V12L24 4Z"
+              fill="#EFF6FF" stroke="#1E40AF" stroke-width="2"/>
+        <path d="M17 24L22 29L31 19" stroke="#1E40AF" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>NetShield Angola</h1>
+      <p>Protecção inteligente de redes</p>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Entrar</div>
+      <div class="auth-tab" onclick="switchAuthTab('register')">Criar conta</div>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <div class="field"><label>Utilizador ou Email</label>
+        <input id="l-user" type="text" placeholder="admin" autocomplete="username"/></div>
+      <div class="field"><label>Senha</label>
+        <input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="tab-register" style="display:none">
+      <div class="field"><label>Nome completo</label>
+        <input id="r-name" type="text" placeholder="João Silva"/></div>
+      <div class="field"><label>Utilizador</label>
+        <input id="r-user" type="text" placeholder="joao.silva"/></div>
+      <div class="field"><label>Email</label>
+        <input id="r-email" type="email" placeholder="joao@empresa.ao"/></div>
+      <div class="field"><label>Senha</label>
+        <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres"
+               onkeydown="if(event.key==='Enter')doRegister()"/></div>
+      <button class="btn-primary" onclick="doRegister()">Criar conta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 28 28" fill="none">
+          <path d="M14 2L3 7V14C3 19.8 8 25.1 14 27C20 25.1 25 19.8 25 14V7L14 2Z"
+                fill="#EFF6FF" stroke="#1E40AF" stroke-width="1.5"/>
+          <path d="M10 14L13 17L18 11" stroke="#1E40AF" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        NetShield Angola
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="pill-status pill-online" id="sys-status">
+        <div class="dot-pulse anim"></div>
+        <span id="sys-status-text">Online</span>
+      </div>
+      <button class="notif-btn" onclick="openAlerts()" title="Alertas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <div class="notif-badge" id="notif-badge">0</div>
+      </button>
+      <div class="user-chip" onclick="navigate('profile')">
+        <div class="avatar" id="user-avatar">U</div>
+        <span id="user-name-chip">Utilizador</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>Dashboard
+      </div>
+      <div class="nav-item" onclick="navigate('history')" id="nav-history">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>Histórico
+      </div>
+      <div class="nav-item" onclick="navigate('blocked')" id="nav-blocked">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+        </svg>IPs Bloqueados
+      </div>
+      <div class="nav-item" onclick="navigate('alerts')" id="nav-alerts">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>Alertas
+      </div>
+      <div class="nav-sep"></div>
+      <div class="nav-section-label">Administração</div>
+      <div class="nav-item admin-only" onclick="navigate('users')" id="nav-users">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>Utilizadores
+      </div>
+      <div class="nav-sep"></div>
+      <div class="nav-item" onclick="navigate('profile')" id="nav-profile">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>Perfil
+      </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="panel active" id="panel-dashboard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+          <div>
+            <div class="sec-title">Dashboard</div>
+            <div class="sec-sub" id="dash-greeting">Bem-vindo ao NetShield Angola</div>
+          </div>
+          <button class="btn btn-warn" onclick="openSimulateModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Simular Ataque
+          </button>
+        </div>
+
+        <!-- RISK CARD -->
+        <div class="risk-card normal" id="risk-card" style="margin-bottom:20px">
+          <div class="risk-icon normal" id="risk-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </div>
+          <div style="flex:1">
+            <div class="risk-label normal" id="risk-label">TRÁFEGO NORMAL</div>
+            <div class="risk-value" id="risk-resultado">—</div>
+            <div class="risk-sub" id="risk-detail">A aguardar dados do dispositivo...</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">SCORE DE RISCO</div>
+            <div style="font-size:36px;font-weight:700;font-family:var(--mono)" id="risk-score-big">—</div>
+            <div style="font-size:11px;color:var(--text-3)">/100</div>
+          </div>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="grid-4" style="margin-bottom:20px">
+          <div class="card">
+            <div class="stat-mini">
+              <div class="stat-mini-label">Total analisado</div>
+              <div class="stat-mini-val" id="s-total">—</div>
+              <div class="stat-mini-sub">pacotes avaliados</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="stat-mini">
+              <div class="stat-mini-label" style="color:var(--success)">Normal</div>
+              <div class="stat-mini-val" style="color:var(--success)" id="s-normal">—</div>
+              <div class="stat-mini-sub">eventos normais</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="stat-mini">
+              <div class="stat-mini-label" style="color:var(--warning)">Suspeito</div>
+              <div class="stat-mini-val" style="color:var(--warning)" id="s-suspeito">—</div>
+              <div class="stat-mini-sub">eventos suspeitos</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="stat-mini">
+              <div class="stat-mini-label" style="color:var(--danger)">Ataques</div>
+              <div class="stat-mini-val" style="color:var(--danger)" id="s-ataque">—</div>
+              <div class="stat-mini-sub">ataques detectados</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHART + EXPLANATION -->
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Tráfego em tempo real (pkt/s)</span></div>
+            <div class="chart-wrap">
+              <canvas id="traffic-chart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Análise detalhada</span></div>
+            <div class="card-body">
+              <div style="margin-bottom:14px">
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:6px">NÍVEL DE CONFIANÇA DA IA</div>
+                <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+                  <div id="conf-bar" style="height:100%;width:0%;background:var(--primary);border-radius:3px;transition:.5s"></div>
+                </div>
+                <div style="font-size:12px;color:var(--text-2);margin-top:4px"><span id="conf-pct">—</span>% de confiança</div>
+              </div>
+              <div style="margin-bottom:14px">
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:6px">TIPO DE AMEAÇA IDENTIFICADO</div>
+                <div style="font-size:14px;font-weight:600;color:var(--text)" id="attack-type-label">—</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:6px">EXPLICAÇÃO DO SISTEMA</div>
+                <div class="explain-box" id="explanation-box">
+                  A aguardar análise do tráfego de rede...
+                </div>
+              </div>
+              <div style="margin-top:14px">
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">DISPOSITIVO</div>
+                <div style="font-size:13px;font-family:var(--mono);color:var(--primary)" id="device-label">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECENT EVENTS -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Eventos recentes</span>
+            <button class="btn btn-ghost btn-sm" onclick="navigate('history')">Ver todos →</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Hora</th><th>Dispositivo</th><th>Pkt/s</th>
+                <th>Score</th><th>Resultado</th><th>Tipo</th>
+              </tr></thead>
+              <tbody id="recent-tbody"><tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-3)">A carregar...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ HISTORY ═══ -->
+      <div class="panel" id="panel-history">
+        <div class="sec-title">Histórico de eventos</div>
+        <div class="sec-sub">Pesquisa e filtra todos os eventos registados</div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Resultado</label>
+            <select id="h-filter-res">
+              <option value="">Todos</option>
+              <option value="normal">Normal</option>
+              <option value="suspeito">Suspeito</option>
+              <option value="ataque">Ataque</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>De</label>
+            <input id="h-from" type="date"/>
+          </div>
+          <div class="form-field">
+            <label>Até</label>
+            <input id="h-to" type="date"/>
+          </div>
+          <button class="btn btn-blue" onclick="loadHistory()">Pesquisar</button>
+          <button class="btn btn-ghost admin-only" onclick="clearAllLogs()" style="color:var(--danger);border-color:#FECACA">Limpar tudo</button>
+        </div>
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>#</th><th>Timestamp</th><th>Dispositivo</th>
+                <th>Pkt/s</th><th>Bytes/s</th><th>Score</th>
+                <th>Resultado</th><th>Tipo ataque</th><th>IP origem</th><th>Explicação</th>
+              </tr></thead>
+              <tbody id="history-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ BLOCKED IPs ═══ -->
+      <div class="panel" id="panel-blocked">
+        <div class="sec-title">IPs Bloqueados</div>
+        <div class="sec-sub">Gerir IPs bloqueados manualmente ou pelo sistema</div>
+        <div class="form-row" style="margin-bottom:20px">
+          <div class="form-field">
+            <label>Endereço IP</label>
+            <input id="block-ip-input" type="text" placeholder="192.168.1.50"/>
+          </div>
+          <div class="form-field">
+            <label>Motivo</label>
+            <input id="block-reason-input" type="text" placeholder="Comportamento suspeito"/>
+          </div>
+          <button class="btn btn-red" onclick="blockIPManual()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+            Bloquear IP
+          </button>
+        </div>
+        <div class="card" id="blocked-list">
+          <div class="empty"><p>Nenhum IP bloqueado</p></div>
+        </div>
+      </div>
+
+      <!-- ═══ ALERTS ═══ -->
+      <div class="panel" id="panel-alerts">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+          <div>
+            <div class="sec-title">Alertas</div>
+            <div class="sec-sub">Notificações do sistema</div>
+          </div>
+          <button class="btn btn-ghost" onclick="markRead()">Marcar todos como lidos</button>
+        </div>
+        <div class="card" id="alerts-list"></div>
+      </div>
+
+      <!-- ═══ PROFILE ═══ -->
+      <div class="panel" id="panel-profile">
+        <div class="sec-title">Meu Perfil</div>
+        <div class="sec-sub">Informações da conta</div>
+        <div class="card" style="max-width:480px">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+              <div class="avatar" id="profile-avatar" style="width:52px;height:52px;font-size:20px">U</div>
+              <div>
+                <div style="font-size:17px;font-weight:700" id="profile-fullname">—</div>
+                <div style="font-size:13px;color:var(--text-2)" id="profile-email">—</div>
+                <span class="badge badge-info" id="profile-role" style="margin-top:4px">user</span>
+              </div>
+            </div>
+            <div style="display:grid;gap:12px">
+              <div><div style="font-size:11px;color:var(--text-3);margin-bottom:3px">UTILIZADOR</div>
+                <div style="font-size:14px;font-weight:500" id="profile-username">—</div></div>
+              <div><div style="font-size:11px;color:var(--text-3);margin-bottom:3px">CONTA CRIADA</div>
+                <div style="font-size:14px" id="profile-created">—</div></div>
+              <div><div style="font-size:11px;color:var(--text-3);margin-bottom:3px">ÚLTIMO LOGIN</div>
+                <div style="font-size:14px" id="profile-lastlogin">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ USERS (ADMIN) ═══ -->
+      <div class="panel admin-only" id="panel-users">
+        <div class="sec-title">Gestão de utilizadores</div>
+        <div class="sec-sub">Administrar contas do sistema</div>
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>#</th><th>Nome</th><th>Utilizador</th><th>Email</th>
+                <th>Perfil</th><th>Criado em</th><th>Estado</th><th>Ação</th>
+              </tr></thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<!-- ═══ SIMULATE MODAL ═══ -->
+<div class="modal-overlay" id="sim-modal">
+  <div class="modal">
+    <h2>Simular ataque à rede</h2>
+    <p>Selecciona o tipo de ataque. O sistema vai gerar dados reais baseados nas features do modelo de IA e reagir em tempo real.</p>
+    <div class="attack-options">
+      <div class="attack-opt selected" onclick="selectAttack('ddos')" id="opt-ddos">
+        <div class="attack-opt-icon">🌊</div>
+        <div class="attack-opt-name">DDoS Flood</div>
+        <div class="attack-opt-desc">Inundação de pacotes</div>
+      </div>
+      <div class="attack-opt" onclick="selectAttack('syn_flood')" id="opt-syn_flood">
+        <div class="attack-opt-icon">⚡</div>
+        <div class="attack-opt-name">SYN Flood</div>
+        <div class="attack-opt-desc">Esgotamento de conexões</div>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:20px">
+      <div class="form-field">
+        <label>Número de rondas</label>
+        <input id="sim-rounds" type="number" value="5" min="1" max="10"/>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSimulateModal()">Cancelar</button>
+      <button class="btn btn-warn" onclick="runSimulation()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Iniciar simulação
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="alert-toast">
+  <button class="toast-close" onclick="closeToast()">×</button>
+  <div class="toast-title" id="toast-title">Alerta</div>
+  <div class="toast-msg"   id="toast-msg"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIGURAÇÃO
+// ═══════════════════════════════════════════════════════
+const API = window.location.origin;
+let TOKEN = localStorage.getItem('ns_token') || '';
+let CURRENT_USER = null;
+let selectedAttack = 'ddos';
+let lastAlertCount = 0;
+let toastTimer = null;
+
+// ═══════════════════════════════════════════════════════
+// AUTH HELPERS
+// ═══════════════════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0) === (tab==='login')));
+  document.getElementById('tab-login').style.display    = tab==='login'    ? '' : 'none';
+  document.getElementById('tab-register').style.display = tab==='register' ? '' : 'none';
+  document.getElementById('auth-error').style.display   = 'none';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function doLogin() {
+  const u = document.getElementById('l-user').value.trim();
+  const p = document.getElementById('l-pass').value;
+  if (!u || !p) return showAuthError('Preenche todos os campos');
+  try {
+    const r = await fetch(`${API}/auth/login`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:u, password:p})
+    });
+    const d = await r.json();
+    if (!r.ok) return showAuthError(d.detail || 'Erro ao entrar');
+    TOKEN = d.token;
+    localStorage.setItem('ns_token', TOKEN);
+    loadApp(d.user);
+  } catch { showAuthError('Servidor indisponível'); }
+}
+
+async function doRegister() {
+  const name  = document.getElementById('r-name').value.trim();
+  const user  = document.getElementById('r-user').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const pass  = document.getElementById('r-pass').value;
+  if (!name||!user||!email||!pass) return showAuthError('Preenche todos os campos');
+  if (pass.length < 6) return showAuthError('Senha deve ter pelo menos 6 caracteres');
+  try {
+    const r = await fetch(`${API}/auth/register`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:user, email, password:pass, full_name:name})
+    });
+    const d = await r.json();
+    if (!r.ok) return showAuthError(d.detail || 'Erro ao registar');
+    switchAuthTab('login');
+    document.getElementById('l-user').value = user;
+    showAuthError(''); // clear
+    document.getElementById('auth-error').style.display='none';
+    document.getElementById('l-user').focus();
+  } catch { showAuthError('Servidor indisponível'); }
+}
+
+async function doLogout() {
+  await fetch(`${API}/auth/logout`, {method:'POST', headers:{Authorization:`Bearer ${TOKEN}`}}).catch(()=>{});
+  TOKEN = '';
+  localStorage.removeItem('ns_token');
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════════
+// LOAD APP
+// ═══════════════════════════════════════════════════════
+function loadApp(user) {
+  CURRENT_USER = user;
+  document.getElementById('auth-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+
+  // Admin class
+  if (user.role === 'admin') {
+    app.classList.add('is-admin');
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display='flex');
+  }
+
+  // Topbar
+  const initials = (user.full_name || user.username).split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+  if (user.role === 'admin') document.getElementById('user-avatar').classList.add('admin-av');
+  document.getElementById('user-name-chip').textContent = user.full_name || user.username;
+
+  // Profile
+  document.getElementById('profile-avatar').textContent    = initials;
+  document.getElementById('profile-fullname').textContent  = user.full_name || '—';
+  document.getElementById('profile-email').textContent     = user.email;
+  document.getElementById('profile-username').textContent  = user.username;
+  document.getElementById('profile-role').textContent      = user.role === 'admin' ? '👑 Administrador' : '👤 Utilizador';
+  document.getElementById('profile-created').textContent   = fmtDate(user.created_at);
+  document.getElementById('profile-lastlogin').textContent = fmtDate(user.last_login);
+
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  document.getElementById('dash-greeting').textContent = `${greet}, ${user.full_name || user.username}`;
+
+  navigate('dashboard');
+  startPolling();
+  if (user.role === 'admin') loadUsers();
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function navigate(panel) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const p = document.getElementById(`panel-${panel}`);
+  const n = document.getElementById(`nav-${panel}`);
+  if (p) p.classList.add('active');
+  if (n) n.classList.add('active');
+  if (panel === 'history') loadHistory();
+  if (panel === 'blocked') loadBlocked();
+  if (panel === 'alerts')  loadAlerts();
+  if (panel === 'users')   loadUsers();
+}
+
+// ═══════════════════════════════════════════════════════
+// POLLING — actualiza dashboard a cada 2.5s
+// ═══════════════════════════════════════════════════════
+function startPolling() {
+  fetchDashboard();
+  setInterval(fetchDashboard, 2500);
+  checkStatus();
+  setInterval(checkStatus, 10000);
+}
+
+async function fetchDashboard() {
+  try {
+    const [logsR, statsR] = await Promise.all([
+      fetch(`${API}/logs?limit=25`, {headers:{Authorization:`Bearer ${TOKEN}`}}),
+      fetch(`${API}/stats`,         {headers:{Authorization:`Bearer ${TOKEN}`}})
+    ]);
+    if (logsR.status === 401) { doLogout(); return; }
+    const logs  = await logsR.json();
+    const stats = await statsR.json();
+    updateDashboard(logs, stats);
+  } catch {}
+}
+
+function updateDashboard(logs, stats) {
+  // Stats counters
+  document.getElementById('s-total').textContent    = stats.total || 0;
+  document.getElementById('s-normal').textContent   = stats.por_resultado?.normal   || 0;
+  document.getElementById('s-suspeito').textContent = stats.por_resultado?.suspeito || 0;
+  document.getElementById('s-ataque').textContent   = stats.por_resultado?.ataque   || 0;
+
+  // Unread alerts badge
+  const ua = stats.unread_alerts || 0;
+  const badge = document.getElementById('notif-badge');
+  badge.textContent = ua;
+  badge.style.display = ua > 0 ? 'flex' : 'none';
+
+  // Chart
+  if (stats.recentes?.length) updateChart(stats.recentes);
+
+  // Latest event
+  if (logs?.length) updateLatestEvent(logs[0]);
+
+  // Recent table
+  updateRecentTable(logs || []);
+}
+
+function updateLatestEvent(log) {
+  const r = log.resultado;
+  const score = log.risk_score || 0;
+
+  // Risk card
+  const card = document.getElementById('risk-card');
+  const icon = document.getElementById('risk-icon');
+  card.className = `risk-card ${r}`;
+  icon.className = `risk-icon ${r}`;
+
+  const iconSVGs = {
+    normal: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`,
+    suspeito: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    ataque: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
+  };
+  icon.innerHTML = iconSVGs[r] || iconSVGs.normal;
+
+  const labels = {normal:'TRÁFEGO NORMAL', suspeito:'ACTIVIDADE SUSPEITA', ataque:'ATAQUE DETECTADO'};
+  document.getElementById('risk-label').textContent    = labels[r] || r;
+  document.getElementById('risk-label').className      = `risk-label ${r}`;
+  document.getElementById('risk-resultado').textContent = log.device_id || '—';
+  document.getElementById('risk-detail').textContent   = log.explanation || '—';
+  document.getElementById('risk-score-big').textContent = score.toFixed(0);
+
+  // Analysis panel
+  const conf = log.confidence || 0;
+  document.getElementById('conf-bar').style.width       = conf + '%';
+  document.getElementById('conf-pct').textContent       = conf.toFixed(0);
+  document.getElementById('attack-type-label').textContent = log.attack_type || 'N/A';
+  document.getElementById('explanation-box').textContent   = log.explanation || '—';
+  document.getElementById('device-label').textContent      = log.device_id || '—';
+
+  // Toast for attacks
+  if (r === 'ataque' && score > 60) {
+    showToast('critical', '🚨 Ataque detectado!', log.explanation || `Score: ${score.toFixed(0)}/100`);
+  } else if (r === 'suspeito' && score > 50) {
+    showToast('warning', '⚠️ Tráfego suspeito', log.explanation || `Score: ${score.toFixed(0)}/100`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART
+// ═══════════════════════════════════════════════════════
+let chart = null;
+function updateChart(recentes) {
+  const ctx = document.getElementById('traffic-chart').getContext('2d');
+  const labels = recentes.map(r => r.timestamp?.substring(11,19) || '');
+  const data   = recentes.map(r => r.packets_per_sec || 0);
+  const colors = recentes.map(r =>
+    r.resultado==='ataque' ? '#DC2626' : r.resultado==='suspeito' ? '#D97706' : '#16A34A');
+
+  if (!chart) {
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Pkt/s',
+          data,
+          borderColor: '#1E40AF',
+          backgroundColor: 'rgba(30,64,175,0.07)',
+          borderWidth: 2,
+          pointBackgroundColor: colors,
+          pointRadius: 4,
+          tension: 0.4,
+          fill: true,
+        }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        animation:{duration:300},
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:'#94A3B8',font:{size:10},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(0,0,0,.04)'}},
+          y:{ticks:{color:'#94A3B8',font:{size:10}},grid:{color:'rgba(0,0,0,.04)'},beginAtZero:true}
+        }
+      }
+    });
+  } else {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data;
+    chart.data.datasets[0].pointBackgroundColor = colors;
+    chart.update('none');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TABLES
+// ═══════════════════════════════════════════════════════
+function updateRecentTable(logs) {
+  const tbody = document.getElementById('recent-tbody');
+  if (!logs.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-3)">Nenhum evento registado</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = logs.slice(0,10).map(log => `
+    <tr>
+      <td>${log.timestamp?.substring(11,19)||'—'}</td>
+      <td><span style="font-family:var(--mono);font-size:12px">${log.device_id||'—'}</span></td>
+      <td>${(log.packets_per_sec||0).toFixed(0)}</td>
+      <td><strong>${(log.risk_score||0).toFixed(0)}/100</strong></td>
+      <td><span class="badge badge-${log.resultado}">${log.resultado||'—'}</span></td>
+      <td style="color:var(--text-2);font-size:12px">${log.attack_type||'N/A'}</td>
+    </tr>`).join('');
+}
+
+async function loadHistory() {
+  const res    = document.getElementById('h-filter-res').value;
+  const from   = document.getElementById('h-from').value;
+  const to     = document.getElementById('h-to').value;
+  let url = `${API}/logs?limit=100`;
+  if (res)  url += `&resultado=${res}`;
+  if (from) url += `&date_from=${from}T00:00:00`;
+  if (to)   url += `&date_to=${to}T23:59:59`;
+  try {
+    const r = await fetch(url, {headers:{Authorization:`Bearer ${TOKEN}`}});
+    const logs = await r.json();
+    const tbody = document.getElementById('history-tbody');
+    if (!logs.length) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-3)">Nenhum registo encontrado</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = logs.map(log => `
+      <tr>
+        <td>${log.id}</td>
+        <td style="font-size:11px">${log.timestamp?.substring(0,19).replace('T',' ')||'—'}</td>
+        <td><span style="font-family:var(--mono);font-size:11px">${log.device_id||'—'}</span></td>
+        <td>${(log.packets_per_sec||0).toFixed(0)}</td>
+        <td>${fmtBytes(log.bytes_per_sec||0)}</td>
+        <td><strong>${(log.risk_score||0).toFixed(0)}</strong></td>
+        <td><span class="badge badge-${log.resultado}">${log.resultado||'—'}</span></td>
+        <td style="font-size:11px;color:var(--text-2)">${log.attack_type||'N/A'}</td>
+        <td style="font-family:var(--mono);font-size:11px">${log.source_ip||'N/A'}</td>
+        <td style="font-size:11px;color:var(--text-2);max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${log.explanation||''}">${log.explanation||'—'}</td>
+      </tr>`).join('');
+  } catch {}
+}
+
+async function clearAllLogs() {
+  if (!confirm('Apagar TODOS os logs? Esta acção não pode ser desfeita.')) return;
+  await fetch(`${API}/logs`, {method:'DELETE', headers:{Authorization:`Bearer ${TOKEN}`}});
+  loadHistory();
+  fetchDashboard();
+}
+
+// ═══════════════════════════════════════════════════════
+// BLOCKED IPs
+// ═══════════════════════════════════════════════════════
+async function loadBlocked() {
+  try {
+    const r = await fetch(`${API}/blocked`, {headers:{Authorization:`Bearer ${TOKEN}`}});
+    const list = await r.json();
+    const container = document.getElementById('blocked-list');
+    if (!list.length) {
+      container.innerHTML = `<div class="empty"><p>Nenhum IP bloqueado de momento</p></div>`;
+      return;
+    }
+    container.innerHTML = list.map(b => `
+      <div class="ip-item">
+        <div>
+          <div class="ip-addr">${b.ip}</div>
+          <div class="ip-meta">Bloqueado em ${fmtDate(b.blocked_at)} por ${b.blocked_by} · ${b.reason||'sem motivo'}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="unblockIP('${b.ip}')" style="color:var(--success);border-color:#BBF7D0">
+          Desbloquear
+        </button>
+      </div>`).join('');
+  } catch {}
+}
+
+async function blockIPManual() {
+  const ip     = document.getElementById('block-ip-input').value.trim();
+  const reason = document.getElementById('block-reason-input').value.trim();
+  if (!ip) return alert('Insere um endereço IP');
+  await fetch(`${API}/blocked`, {
+    method:'POST', headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'},
+    body: JSON.stringify({ip, reason})
+  });
+  document.getElementById('block-ip-input').value = '';
+  document.getElementById('block-reason-input').value = '';
+  loadBlocked();
+}
+
+async function unblockIP(ip) {
+  await fetch(`${API}/blocked/${encodeURIComponent(ip)}`, {method:'DELETE', headers:{Authorization:`Bearer ${TOKEN}`}});
+  loadBlocked();
+}
+
+// ═══════════════════════════════════════════════════════
+// ALERTS
+// ═══════════════════════════════════════════════════════
+function openAlerts() { navigate('alerts'); }
+
+async function loadAlerts() {
+  try {
+    const r = await fetch(`${API}/alerts?limit=30`, {headers:{Authorization:`Bearer ${TOKEN}`}});
+    const list = await r.json();
+    const container = document.getElementById('alerts-list');
+    if (!list.length) {
+      container.innerHTML = `<div class="empty"><p>Nenhum alerta registado</p></div>`;
+      return;
+    }
+    container.innerHTML = `<div style="padding:8px 0">` + list.map(a => `
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 20px;border-bottom:1px solid var(--border);${a.read?'opacity:.5':''}">
+        <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;
+          background:${a.level==='critical'?'var(--danger)':a.level==='warning'?'var(--warning)':'var(--primary)'}"></div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${a.message}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:3px">${fmtDate(a.timestamp)}</div>
+        </div>
+        <span class="badge ${a.level==='critical'?'badge-ataque':a.level==='warning'?'badge-suspeito':'badge-info'}">${a.level}</span>
+      </div>`).join('') + `</div>`;
+  } catch {}
+}
+
+async function markRead() {
+  await fetch(`${API}/alerts/read`, {method:'POST', headers:{Authorization:`Bearer ${TOKEN}`}});
+  loadAlerts();
+  document.getElementById('notif-badge').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+// USERS (ADMIN)
+// ═══════════════════════════════════════════════════════
+async function loadUsers() {
+  try {
+    const r = await fetch(`${API}/admin/users`, {headers:{Authorization:`Bearer ${TOKEN}`}});
+    if (!r.ok) return;
+    const users = await r.json();
+    document.getElementById('users-tbody').innerHTML = users.map(u => `
+      <tr class="${u.active ? 'user-row-active' : 'user-row-inactive'}">
+        <td>${u.id}</td>
+        <td>${u.full_name||'—'}</td>
+        <td><span style="font-family:var(--mono);font-size:12px">${u.username}</span></td>
+        <td style="font-size:12px">${u.email}</td>
+        <td><span class="badge ${u.role==='admin'?'badge-blocked':'badge-info'}">${u.role==='admin'?'👑 admin':'👤 user'}</span></td>
+        <td style="font-size:12px">${fmtDate(u.created_at)}</td>
+        <td><span class="badge ${u.active?'badge-normal':'badge-suspeito'}">${u.active?'Activo':'Inactivo'}</span></td>
+        <td>
+          ${u.username !== 'admin' ? `
+          <button class="btn btn-ghost btn-sm" onclick="toggleUser(${u.id},${u.active?0:1})"
+            style="color:${u.active?'var(--danger)':'var(--success)'};border-color:${u.active?'#FECACA':'#BBF7D0'}">
+            ${u.active ? 'Desactivar' : 'Activar'}
+          </button>` : '<span style="color:var(--text-3);font-size:12px">protegido</span>'}
+        </td>
+      </tr>`).join('');
+  } catch {}
+}
+
+async function toggleUser(id, active) {
+  await fetch(`${API}/admin/users/${id}`, {
+    method:'PATCH', headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'},
+    body: JSON.stringify({active})
+  });
+  loadUsers();
+}
+
+// ═══════════════════════════════════════════════════════
+// SIMULATION MODAL
+// ═══════════════════════════════════════════════════════
+function openSimulateModal()  { document.getElementById('sim-modal').classList.add('open'); }
+function closeSimulateModal() { document.getElementById('sim-modal').classList.remove('open'); }
+
+function selectAttack(type) {
+  selectedAttack = type;
+  document.querySelectorAll('.attack-opt').forEach(o => o.classList.remove('selected'));
+  document.getElementById(`opt-${type}`).classList.add('selected');
+}
+
+async function runSimulation() {
+  const rounds = parseInt(document.getElementById('sim-rounds').value) || 5;
+  closeSimulateModal();
+  showToast('warning', '⚡ Simulação iniciada', `${rounds} rondas de ${selectedAttack} em execução...`);
+  try {
+    const r = await fetch(`${API}/simulate`, {
+      method:'POST',
+      headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'},
+      body: JSON.stringify({attack_type: selectedAttack, rounds})
+    });
+    const d = await r.json();
+    fetchDashboard();
+  } catch { showToast('critical','Erro','Não foi possível iniciar a simulação'); }
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+let lastToastMsg = '';
+function showToast(level, title, msg) {
+  if (msg === lastToastMsg) return;
+  lastToastMsg = msg;
+  const t = document.getElementById('alert-toast');
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-msg').textContent   = msg;
+  t.className = level;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(closeToast, 6000);
+}
+function closeToast() {
+  document.getElementById('alert-toast').style.display = 'none';
+  lastToastMsg = '';
+}
+
+// ═══════════════════════════════════════════════════════
+// STATUS CHECK
+// ═══════════════════════════════════════════════════════
+async function checkStatus() {
+  try {
+    const r = await fetch(`${API}/status`);
+    const online = r.ok;
+    document.getElementById('sys-status').className = `pill-status pill-${online?'online':'offline'}`;
+    document.getElementById('sys-status-text').textContent = online ? 'Online' : 'Offline';
+  } catch {
+    document.getElementById('sys-status').className = 'pill-status pill-offline';
+    document.getElementById('sys-status-text').textContent = 'Offline';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return iso.substring(0,16).replace('T',' ');
+}
+
+function fmtBytes(b) {
+  if (b >= 1e6) return (b/1e6).toFixed(1) + ' MB/s';
+  if (b >= 1e3) return (b/1e3).toFixed(0) + ' KB/s';
+  return b.toFixed(0) + ' B/s';
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTO LOGIN se token já existe
+// ═══════════════════════════════════════════════════════
+(async function init() {
+  if (!TOKEN) return;
+  try {
+    const r = await fetch(`${API}/auth/me`, {headers:{Authorization:`Bearer ${TOKEN}`}});
+    if (r.ok) { loadApp(await r.json()); }
+    else { TOKEN=''; localStorage.removeItem('ns_token'); }
+  } catch {}
+})();
+</script>
+</body>
+</html>
